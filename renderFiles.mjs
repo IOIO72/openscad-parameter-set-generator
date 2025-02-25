@@ -1,17 +1,12 @@
 import { readdir, existsSync, mkdirSync } from 'fs';
-import { join, dirname, extname, basename } from 'path';
+import { join, extname, basename } from 'path';
 import { exec } from 'child_process';
-import { fileURLToPath } from 'url';
-
-// Path to the current file and directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Path to the output directory containing .scad files
-const outputDir = join(__dirname, 'output');
+const outputDir = join(process.cwd(), 'output');
 
 // Path to the stl directory for rendered .stl files
-const stlDir = join(__dirname, 'stl');
+const stlDir = join(process.cwd(), 'stl');
 
 // Create stl directory if it doesn't exist
 if (!existsSync(stlDir)) {

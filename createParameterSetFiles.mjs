@@ -1,10 +1,5 @@
 import { readFile, existsSync, mkdirSync, writeFile } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-// Path to the current file and directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { join } from 'path';
 
 // Get command-line arguments
 const args = process.argv.slice(2);
@@ -38,8 +33,8 @@ readFile(jsonFilePath, 'utf8', (err, data) => {
         return;
       }
 
-      // Create directory for output files
-      const outputDir = join(__dirname, 'output');
+      // Create directory for output files in the current working directory
+      const outputDir = join(process.cwd(), 'output');
       if (!existsSync(outputDir)) {
         mkdirSync(outputDir);
       }

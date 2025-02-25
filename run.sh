@@ -11,8 +11,8 @@ SCAD_FILE="$1"
 JSON_FILE="$2"
 
 # Paths to the directories
-OUTPUT_DIR="$(dirname "$0")/output"
-STL_DIR="$(dirname "$0")/stl"
+OUTPUT_DIR="$(pwd)/output"
+STL_DIR="$(pwd)/stl"
 
 # Step 1: Empty the output directory if it exists
 if [ -d "$OUTPUT_DIR" ]; then
