@@ -39,22 +39,29 @@ readFile(jsonFilePath, 'utf8', (err, data) => {
         mkdirSync(outputDir);
       }
 
+      // Split the template into lines
+      const templateLines = templateData.split('\n');
+
       // Create an OpenSCAD file for each sub-object in parameterSets
       for (const [key, value] of Object.entries(parameterSets)) {
         const filePath = join(outputDir, `${key}.scad`);
-        let fileContent = templateData;
-
-        // Replace the constant values in the template with the values from the JSON sub-object
-        for (const [k, v] of Object.entries(value)) {
-          const regex = new RegExp(`${k} = (".*?"|.*?);`, 'g');
-          fileContent = fileContent.replace(regex, (match, p1) => {
-            if (p1.startsWith('"') && p1.endsWith('"')) {
-              return `${k} = "${v}";`;
-            } else {
-              return `${k} = ${v};`;
+        let fileContent = templateLines
+          .map((line) => {
+            for (const [k, v] of Object.entries(value)) {
+              if (line.startsWith(`${k} = `)) {
+                const regex = new RegExp(`^${k} = (".*?"|.*?);`);
+                return line.replace(regex, (match, p1) => {
+                  if (p1.startsWith('"') && p1.endsWith('"')) {
+                    return `${k} = "${v}";`;
+                  } else {
+                    return `${k} = ${v};`;
+                  }
+                });
+              }
             }
-          });
-        }
+            return line;
+          })
+          .join('\n');
 
         writeFile(filePath, fileContent, (err) => {
           if (err) {
