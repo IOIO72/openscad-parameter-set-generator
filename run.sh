@@ -16,7 +16,7 @@ STL_DIR="$(pwd)/stl"
 
 # Step 1: Empty the output directory if it exists
 if [ -d "$OUTPUT_DIR" ]; then
-  rm -rf "$OUTPUT_DIR"/*
+  rm -rf "$OUTPUT_DIR"/*.scad
 fi
 
 # Step 2: Execute createParameterSetFiles.mjs with the arguments
@@ -24,7 +24,7 @@ node "$(dirname "$0")/createParameterSetFiles.mjs" "$SCAD_FILE" "$JSON_FILE"
 
 # Step 3: Empty the stl directory if it exists
 if [ -d "$STL_DIR" ]; then
-  rm -rf "$STL_DIR"/*
+  rm -rf "$STL_DIR"/*.stl
 fi
 
 # Step 4: Execute renderFiles.mjs
