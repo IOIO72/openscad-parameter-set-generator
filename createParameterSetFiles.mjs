@@ -15,64 +15,75 @@ if (args.length < 2) {
 // Paths to the SCAD and JSON files
 const [templateFilePath, jsonFilePath] = args;
 
-// Read the JSON file
-readFile(jsonFilePath, 'utf8', (err, data) => {
-  if (err) {
-    console.error('Error reading the JSON file:', err);
-    return;
-  }
-
-  try {
-    const jsonData = JSON.parse(data);
-    const parameterSets = jsonData.parameterSets;
-
-    // Read the template file
-    readFile(templateFilePath, 'utf8', (err, templateData) => {
-      if (err) {
-        console.error('Error reading the template file:', err);
-        return;
-      }
-
-      // Create directory for output files in the current working directory
-      const outputDir = join(process.cwd(), 'output');
-      if (!existsSync(outputDir)) {
-        mkdirSync(outputDir);
-      }
-
-      // Split the template into lines
-      const templateLines = templateData.split('\n');
-
-      // Create an OpenSCAD file for each sub-object in parameterSets
-      for (const [key, value] of Object.entries(parameterSets)) {
-        const filePath = join(outputDir, `${key}.scad`);
-        let fileContent = templateLines
-          .map((line) => {
-            for (const [k, v] of Object.entries(value)) {
-              if (line.startsWith(`${k} = `)) {
-                const regex = new RegExp(`^${k} = (".*?"|.*?);`);
-                return line.replace(regex, (match, p1) => {
-                  if (p1.startsWith('"') && p1.endsWith('"')) {
-                    return `${k} = "${v}";`;
-                  } else {
-                    return `${k} = ${v};`;
-                  }
-                });
-              }
-            }
-            return line;
-          })
-          .join('\n');
-
-        writeFile(filePath, fileContent, (err) => {
-          if (err) {
-            console.error(`Error writing the file ${key}.scad:`, err);
-          } else {
-            console.log(`File ${key}.scad successfully created.`);
-          }
-        });
-      }
+// Function to read a file and return a promise
+const readFileAsync = (path, encoding = 'utf8') =>
+  new Promise((resolve, reject) => {
+    readFile(path, encoding, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
     });
-  } catch (err) {
-    console.error('Error parsing the JSON data:', err);
+  });
+
+// Function to write a file and return a promise
+const writeFileAsync = (path, data) =>
+  new Promise((resolve, reject) => {
+    writeFile(path, data, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+// Function to create output directory if it doesn't exist
+const createOutputDir = (dir) => {
+  if (!existsSync(dir)) {
+    mkdirSync(dir);
   }
-});
+};
+
+// Function to replace parameters in the template
+const replaceParameters = (templateLines, parameters) =>
+  templateLines
+    .map((line) => {
+      for (const [key, value] of Object.entries(parameters)) {
+        if (line.startsWith(`${key} = `)) {
+          const regex = new RegExp(`^${key} = (".*?"|.*?);`);
+          return line.replace(regex, (match, p1) =>
+            p1.startsWith('"') && p1.endsWith('"')
+              ? `${key} = "${value}";`
+              : `${key} = ${value};`
+          );
+        }
+      }
+      return line;
+    })
+    .join('\n');
+
+// Main function to create parameter set files
+const createParameterSetFiles = async () => {
+  try {
+    const jsonData = JSON.parse(await readFileAsync(jsonFilePath));
+    const parameterSets = jsonData.parameterSets;
+    const templateData = await readFileAsync(templateFilePath);
+    const templateLines = templateData.split('\n');
+    const outputDir = join(process.cwd(), 'output');
+
+    createOutputDir(outputDir);
+
+    for (const [key, value] of Object.entries(parameterSets)) {
+      const filePath = join(outputDir, `${key}.scad`);
+      const fileContent = replaceParameters(templateLines, value);
+
+      try {
+        await writeFileAsync(filePath, fileContent);
+        console.log(`File ${key}.scad successfully created.`);
+      } catch (err) {
+        console.error(`Error writing the file ${key}.scad:`, err);
+      }
+    }
+  } catch (err) {
+    console.error('Error processing files:', err);
+  }
+};
+
+// Execute the main function
+createParameterSetFiles();
