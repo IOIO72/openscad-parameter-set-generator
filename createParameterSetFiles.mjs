@@ -46,8 +46,14 @@ readFile(jsonFilePath, 'utf8', (err, data) => {
 
         // Replace the constant values in the template with the values from the JSON sub-object
         for (const [k, v] of Object.entries(value)) {
-          const regex = new RegExp(`${k} = .*;`, 'g');
-          fileContent = fileContent.replace(regex, `${k} = ${v};`);
+          const regex = new RegExp(`${k} = (".*?"|.*?);`, 'g');
+          fileContent = fileContent.replace(regex, (match, p1) => {
+            if (p1.startsWith('"') && p1.endsWith('"')) {
+              return `${k} = "${v}";`;
+            } else {
+              return `${k} = ${v};`;
+            }
+          });
         }
 
         writeFile(filePath, fileContent, (err) => {
