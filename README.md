@@ -1,4 +1,4 @@
-1. Add as submodule
+1. Add as submodule in your OpenSCAD project (target repository)
 
 ```sh
 git submodule add https://github.com/IOIO72/openscad-parameter-set-generator.git
